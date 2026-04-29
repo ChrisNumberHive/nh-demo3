@@ -553,6 +553,80 @@
     100% { opacity: 1; transform: scale(1); }
   }
 
+  /* Step-based narrative popup — shown before the teacher plays each scenario */
+  .narrative-popup {
+    position: absolute;
+    left: 50%;
+    bottom: 16px;
+    transform: translateX(-50%);
+    display: none;
+    align-items: center;
+    gap: 14px;
+    background: #fff;
+    border: 1.5px solid var(--honey-deep);
+    border-radius: 14px;
+    padding: 12px 14px 12px 20px;
+    font-size: 16px;
+    color: var(--ink);
+    font-weight: 500;
+    line-height: 1.4;
+    box-shadow: 0 12px 32px rgba(31, 41, 55, 0.18);
+    z-index: 30;
+    max-width: 480px;
+    width: calc(100% - 32px);
+  }
+  .narrative-popup.show {
+    display: flex;
+    animation: narrSlide 0.35s ease both;
+  }
+  .narrative-popup .text { flex: 1; }
+  .narrative-popup .next-btn {
+    flex-shrink: 0;
+    background: var(--honey);
+    color: var(--ink);
+    border: none;
+    border-radius: 9px;
+    padding: 8px 16px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+  .narrative-popup .next-btn:hover {
+    background: var(--honey-deep);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+  @keyframes narrSlide {
+    from { opacity: 0; transform: translate(-50%, 10px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
+  }
+
+  /* While narrative is running, dim the pads + hide the coaching tip */
+  .screen.narrative-mode .numpads {
+    opacity: 0.25;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .screen.narrative-mode .scenario-prompt { display: none; }
+
+  /* Pulse sync — temporary highlight on board cells and pad cells */
+  @keyframes nhPulse {
+    0%, 100% { filter: drop-shadow(0 0 0 rgba(245, 184, 37, 0)); transform: scale(1); }
+    50%      { filter: drop-shadow(0 0 10px rgba(245, 184, 37, 0.85)); transform: scale(1.1); }
+  }
+  .hex.narr-pulse {
+    animation: nhPulse 0.9s ease-in-out 2;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+  @keyframes nhPadPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 184, 37, 0); transform: scale(1); }
+    50%      { box-shadow: 0 0 0 4px rgba(245, 184, 37, 0.5); transform: scale(1.08); }
+  }
+  .pad-cell.narr-pulse { animation: nhPadPulse 0.9s ease-in-out 2; }
+
   /* Caption overlay (feedback after move — pops up over the board) */
   .caption {
     position: absolute;
@@ -1112,12 +1186,13 @@
           </div>
           <div class="scenario-prompt" id="s3hint">
             <div class="icon">?</div>
-            <div><strong>Your student can change only one number pad.</strong> Which factor should they change? They need a product of <strong>27</strong>.</div>
+            <div><strong>Your student can change only one number pad.</strong> Which factor should they change? They need a product of <strong>20</strong>.</div>
           </div>
         </div>
         <div class="numpads" id="pads1"></div>
         <div class="caption" id="caption1"></div>
         <div class="win-banner" id="winBanner1"><span>Won!</span></div>
+        <div class="narrative-popup" id="narrative1"><div class="text"></div><button class="next-btn" type="button"></button></div>
       </div>
     </section>
 
@@ -1146,6 +1221,7 @@
         <div class="numpads" id="pads2"></div>
         <div class="caption" id="caption2"></div>
         <div class="win-banner" id="winBanner2"><span>Won!</span></div>
+        <div class="narrative-popup" id="narrative2"><div class="text"></div><button class="next-btn" type="button"></button></div>
       </div>
     </section>
 
@@ -1173,6 +1249,7 @@
         </div>
         <div class="numpads" id="pads3"></div>
         <div class="caption" id="caption3"></div>
+        <div class="narrative-popup" id="narrative3"><div class="text"></div><button class="next-btn" type="button"></button></div>
       </div>
     </section>
 
@@ -1252,9 +1329,9 @@
       </div>
 
       <div style="margin-top:24px; max-width:620px;">
-        <h1 id="closeHeadline">This is how they build flexible fluency.</h1>
+        <h1 id="closeHeadline">This is what strong number foundations look like.</h1>
         <p class="lead" style="margin-top:14px;" id="closeLead">
-          Your student didn't just recall facts — they applied them, adapted them, and reasoned about what comes next. Fluency isn't speed. It's strategic, flexible thinking.
+          Not just knowing maths — but thinking with it.
         </p>
       </div>
 
@@ -1581,14 +1658,14 @@ ROWS.forEach((r, row) => {
 =========================================================== */
 const SCENARIOS = {
   1: {
-    // Help student win. Student has 88, 63, 9 in a diagonal.
-    // Cell 2 is now P2-claimed → only winning move is 27 (via pad1:3).
-    p1Claimed: [88, 63, 9, 70],
+    // Help student win. Student has 22, 44, 90 horizontally in row 8 (line awaits 20).
+    // Pads (2, 9) — current product 18 (P2's cell). Win move: pad2 9→10 → 2×10=20.
+    p1Claimed: [22, 44, 90, 70],
     p2Claimed: [18, 80, 100, 2],
     pads: { pad1: 2, pad2: 9 },
     openPads: true,
-    winTarget: 27,
-    winLine: [27, 88, 63, 9]
+    winTarget: 20,
+    winLine: [22, 44, 20, 90]
   },
   2: {
     // Block P2. P2 threat line: [28, 49, 63, 12] — they win at 28.
@@ -1621,10 +1698,67 @@ const SCENARIOS = {
    Theme keys: apply | counting | freeze | speed
    Each scenario has a success/alt-success/failure message.
 =========================================================== */
+
+/* Step-based narrative shown BEFORE the teacher plays each scenario.
+   Each step has a short popup line (~8-12 words) and an optional
+   visual sync — a list of board cells and/or pad cells to pulse. */
+const NARRATIVES = {
+  1: {
+    base: [
+      { text: "{NAME} needs 20 to win",       boardCells: [20] },
+      { text: "They know 4 × 5 = 20",          boardCells: [4, 5, 20] },
+      { text: "But the pads have 2 and 9",     padCells: { pad1: 2, pad2: 9 } },
+      { text: "So they rethink" },
+      { text: "2 × 10 also makes 20",          boardCells: [10, 20] },
+      { text: "Same answer. Different factors" }
+    ],
+    pathwayFinal: {
+      apply:    "This is flexible fluency in action",
+      counting: "Repeated use strengthens fact recall",
+      freeze:   "They learn to adapt when things change",
+      speed:    "They use relationships, not just memory"
+    }
+  },
+  2: {
+    base: [
+      { text: "Player 2 is about to win",      boardCells: [49, 63, 12] },
+      { text: "{NAME} needs to block",         boardCells: [28] },
+      { text: "But only if they can make that number" },
+      { text: "They scan their factors",       padCells: { pad1: 7, pad2: 6 } },
+      { text: "They find a way to block" },
+      { text: "Their maths just changed the game" }
+    ],
+    pathwayFinal: {
+      apply:    "They apply facts in real situations",
+      counting: "Facts become useful, not just memorised",
+      freeze:   "They stay calm and think under pressure",
+      speed:    "Correct answers now have purpose"
+    }
+  },
+  3: {
+    base: [
+      { text: "Player 2 can win with 18",      boardCells: [18, 42, 55, 144] },
+      { text: "Usually, {NAME} would block" },
+      { text: "But this time, they can't" },
+      { text: "So the question changes" },
+      { text: "What must they avoid leaving?" },
+      { text: "Factors of 18 are dangerous" },
+      { text: "They choose a safe move" },
+      { text: "They block the next move instead" }
+    ],
+    pathwayFinal: {
+      apply:    "They think flexibly across multiple moves",
+      counting: "They build strong knowledge of factor pairs",
+      freeze:   "They learn to think ahead, not freeze",
+      speed:    "This reveals who truly understands"
+    }
+  }
+};
+
 const MESSAGES = {
   1: {
     win: {
-      apply:    { h: "✓ Exactly right.",      b: "{NAME} spotted that 3×9=27 completed 4 in a row for the win. That's applying facts — not just recall." },
+      apply:    { h: "✓ Exactly right.",      b: "{NAME} spotted that 2×10=20 completed 4 in a row for the win. That's applying facts — not just recall." },
       counting: { h: "✓ Multiplicative thinking.", b: "{NAME} used factor knowledge and reciprocal relationships to take the winning cell. They do this multiple times each game! Repetition and retrieval practice builds fluency and quick recall." },
       freeze:   { h: "✓ Flexible thinking.",  b: "{NAME} was able to think flexibly in a new setting to solve the problem and win the game." },
       speed:    { h: "✓ Chosen, not rushed.",  b: "{NAME} reasoned about which factor change actually wins — not the first thing that came to mind. That's understanding made visible." }
@@ -1913,7 +2047,7 @@ function handleOpenPadClick(scenarioIdx, padKey, newVal) {
           retryable: true,
           customMessage: {
             h: "Not the win.",
-            b: `${nameOrThey()} didn't get the four in a row. They needed to make the product <strong>27</strong>. Try again.`
+            b: `${nameOrThey()} didn't get the four in a row. They needed to make the product <strong>20</strong>. Try again.`
           }
         });
       }, 800);
@@ -2202,11 +2336,94 @@ function goto(n) {
   if (n === 6) renderMgrid();
   if (n === 7) renderMindset();
   if (n === 8) renderEcho();
+  // Scenario screens get the narrative walkthrough first
+  if (n === 3 || n === 4 || n === 5) {
+    startNarrative(n - 2);
+  }
+}
+
+/* ============================================================
+   NARRATIVE ENGINE
+   Step-based popups that play before the teacher plays the
+   scenario. Each step optionally pulses board cells and pad
+   cells in sync with the popup text.
+============================================================ */
+function startNarrative(scenarioIdx) {
+  const screen = document.getElementById(`s${scenarioIdx + 2}`);
+  if (!screen) return;
+  screen.classList.add('narrative-mode');
+  const popup = document.getElementById(`narrative${scenarioIdx}`);
+  if (popup) popup.classList.remove('show');
+  // Start at step 0
+  setTimeout(() => showNarrativeStep(scenarioIdx, 0), 280);
+}
+
+function showNarrativeStep(scenarioIdx, stepIdx) {
+  const narr = NARRATIVES[scenarioIdx];
+  if (!narr) return;
+  const popup = document.getElementById(`narrative${scenarioIdx}`);
+  if (!popup) return;
+  const baseLen = narr.base.length;
+  const isFinal = stepIdx === baseLen;
+  const step = isFinal
+    ? { text: narr.pathwayFinal[state.problem || 'apply'] }
+    : narr.base[stepIdx];
+
+  // Re-trigger slide animation each step
+  popup.classList.remove('show');
+  void popup.offsetWidth;
+  popup.querySelector('.text').textContent = fillName(step.text);
+  popup.classList.add('show');
+
+  // Visual sync
+  if (step.boardCells) pulseBoardCells(scenarioIdx, step.boardCells);
+  if (step.padCells)   pulsePadCells(scenarioIdx, step.padCells);
+
+  const btn = popup.querySelector('.next-btn');
+  btn.textContent = isFinal ? 'Play it →' : 'Next →';
+  btn.onclick = () => {
+    if (isFinal) {
+      endNarrative(scenarioIdx);
+    } else {
+      showNarrativeStep(scenarioIdx, stepIdx + 1);
+    }
+  };
+}
+
+function endNarrative(scenarioIdx) {
+  const screen = document.getElementById(`s${scenarioIdx + 2}`);
+  if (screen) screen.classList.remove('narrative-mode');
+  const popup = document.getElementById(`narrative${scenarioIdx}`);
+  if (popup) popup.classList.remove('show');
+}
+
+function pulseBoardCells(scenarioIdx, products) {
+  const svg = document.getElementById(`board${scenarioIdx}`);
+  if (!svg) return;
+  products.forEach(p => {
+    const poly = svg.querySelector(`polygon[data-product="${p}"]`);
+    if (!poly) return;
+    poly.classList.remove('narr-pulse');
+    void poly.getBoundingClientRect();
+    poly.classList.add('narr-pulse');
+  });
+}
+
+function pulsePadCells(scenarioIdx, padCells) {
+  Object.entries(padCells).forEach(([padKey, value]) => {
+    const padContainer = document.getElementById(`pads${scenarioIdx}-${padKey}`);
+    if (!padContainer) return;
+    const cell = padContainer.querySelector(`.pad-cell[data-value="${value}"]`);
+    if (!cell) return;
+    cell.classList.remove('narr-pulse');
+    void cell.offsetWidth;
+    cell.classList.add('narr-pulse');
+  });
 }
 
 /* Pristine state for each scenario — used by Restart and Try-again */
 const SCENARIO_INITIAL = {
-  1: { p1Claimed: [88, 63, 9, 70], p2Claimed: [18, 80, 100, 2],   pads: { pad1: 2, pad2: 9 } },
+  1: { p1Claimed: [22, 44, 90, 70], p2Claimed: [18, 80, 100, 2], pads: { pad1: 2, pad2: 9 } },
   2: { p1Claimed: [35, 44, 110, 132], p2Claimed: [49, 63, 12, 33], pads: { pad1: 7, pad2: 6 } },
   3: { p1Claimed: [35, 20, 100, 81], p2Claimed: [42, 55, 144, 11], pads: { pad1: 5, pad2: 7 } }
 };
@@ -2327,7 +2544,7 @@ const PATHWAY_CONTENT = {
     3: {
       title: "Can they apply what they know?",
       lead:  "4 in a row wins the game. There's a winning move on the board. Help them find it.",
-      hint:  '<strong>{NAME} can change only one number pad.</strong> Which factor should they change? They need a product of <strong>27</strong>.'
+      hint:  '<strong>{NAME} can change only one number pad.</strong> Which factor should they change? They need a product of <strong>20</strong>.'
     },
     4: {
       title: "Can they think defensively?",
@@ -2344,7 +2561,7 @@ const PATHWAY_CONTENT = {
     3: {
       title: "Can they reason multiplicatively?",
       lead:  "Counting strategies can take too long. This impacts when solving larger problems and can increase cognitive load.",
-      hint:  '4 in a row gets the win. What factors below make the product of <strong>27</strong>?'
+      hint:  '4 in a row gets the win. What factors below make the product of <strong>20</strong>?'
     },
     4: {
       title: "Can they use Number Facts in a timely manner?",
@@ -2361,7 +2578,7 @@ const PATHWAY_CONTENT = {
     3: {
       title: "Can they use Number facts in a new context?",
       lead:  "Player 2 just changed one of the number pads to take the 18 cell (2 × 9 = 18). {NAME} needs 4 in a row to take the win.",
-      hint:  '{NAME} sees that <strong>27</strong> gets them the win. Can they use factors within this game context to make the product 27?'
+      hint:  '{NAME} sees that <strong>20</strong> gets them the win. Can they use factors within this game context to make the product 20?'
     },
     4: {
       title: "Can they use known facts in a new unknown scenario?",
@@ -2378,7 +2595,7 @@ const PATHWAY_CONTENT = {
     3: {
       title: "Can they reason before they answer?",
       lead:  "Speed won't find this win. {NAME} needs to slow down and think about which factor change actually takes the cell.",
-      hint:  '4 in a row gets the win. What factors below make the product of <strong>27</strong>? Don\'t guess — reason it out.'
+      hint:  '4 in a row gets the win. What factors below make the product of <strong>20</strong>? Don\'t guess — reason it out.'
     },
     4: {
       title: "Can they pause long enough to defend?",
@@ -2403,7 +2620,7 @@ const CONTEXT_CARDS = {
     5: "This is a high level of flexible fluency: thinking through factor pairs while reasoning what numbers are safe to leave."
   },
   counting: {
-    3: "You said students struggle with quick recall. The game creates the need for students to retrieve facts, but in a low-stakes, engaging context. {NAME} doesn't feel tested, but they drive their own fluency progress. They need to make the product of 27 by changing one of the factors on the number pads.",
+    3: "You said students struggle with quick recall. The game creates the need for students to retrieve facts, but in a low-stakes, engaging context. {NAME} doesn't feel tested, but they drive their own fluency progress. They need to make the product of 20 by changing one of the factors on the number pads.",
     4: "Repeated retrieval practice, embedded in play. {NAME} will encounter the same facts dozens of times across a game without it feeling like drill.",
     5: "By this point in the game, {NAME} has retrieved the 9×, 7× and 6× facts multiple times. That repetition builds the automaticity you're looking for in an engaging way."
   },
@@ -2456,15 +2673,9 @@ function customizeScenarioPrompts() {
 function renderEcho() {
   const q = PROBLEM_LABELS[state.problem] || "Students freeze when numbers change";
   document.getElementById('echoQuote').textContent = `"${q}"`;
-  const themeCopy = {
-    apply:    { h: "This is how they build applied fluency.", b: "{NAME} didn't just know the facts — they used them to win, to block, and to anticipate. Applied, strategic, flexible thinking." },
-    counting: { h: "This is how they move beyond counting.", b: "Each decision rewarded multiplicative reasoning — not counting. Fluency built in context, not on a worksheet." },
-    freeze:   { h: "This is how they learn to adapt.", b: "Three scenarios, three different demands. {NAME} shifted their thinking each time. That's flexible fluency." },
-    speed:    { h: "Fluency isn't speed. It's strategic thinking.", b: "{NAME} reasoned about facts, factors, and relationships. Not rushed — chosen. That's deep understanding." }
-  };
-  const copy = themeCopy[state.problem] || themeCopy.apply;
-  document.getElementById('closeHeadline').textContent = fillName(copy.h);
-  document.getElementById('closeLead').textContent = fillName(copy.b);
+  // Universal closing — pathway-tailored lines live in the narrative now
+  document.getElementById('closeHeadline').textContent = "This is what strong number foundations look like.";
+  document.getElementById('closeLead').textContent = "Not just knowing maths — but thinking with it.";
 }
 
 /* ===========================================================
