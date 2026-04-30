@@ -136,13 +136,18 @@ export default async function handler(req, res) {
           `— The Number Hive team`,
         ].join('\n');
 
+    // Convert URLs into real <a> links for the HTML version, then turn newlines into <br>.
+    const htmlBody = body
+      .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1">$1</a>')
+      .replace(/\n/g, '<br>');
+
     await sgMail.send({
       to: email,
       from: { email: process.env.SENDGRID_FROM_EMAIL, name: 'Number Hive' },
       replyTo: process.env.SENDGRID_FROM_EMAIL,
       subject,
       text: body,
-      html: body.replace(/\n/g, '<br>'),
+      html: htmlBody,
     });
     result.sendgrid = true;
   } catch (e) {
