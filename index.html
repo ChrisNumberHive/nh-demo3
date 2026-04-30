@@ -1594,7 +1594,7 @@
         <p class="lead" style="margin-top:14px; max-width:520px; margin-left:auto; margin-right:auto;">
           Takes less than two minutes. No credit card, no commitment.
         </p>
-        <form class="signup-card" onsubmit="event.preventDefault(); alert('Prototype — in production this lands in onboarding.');">
+        <form class="signup-card" id="teacherForm" onsubmit="event.preventDefault(); submitTeacherForm();">
           <label for="signupEmail">Your school email address</label>
           <input type="email" id="signupEmail" placeholder="you@school.edu" required>
           <label class="check-row" for="signupUpdates">
@@ -2563,6 +2563,13 @@ function restart() {
   hideLeaderForm();
   const lEmail = document.getElementById('leaderEmail');
   if (lEmail) lEmail.value = '';
+  // Clear narrative state on every scenario screen + hide popups
+  [1, 2, 3].forEach(i => {
+    const screen = document.getElementById(`s${i + 2}`);
+    if (screen) screen.classList.remove('narrative-mode');
+    const popup = document.getElementById(`narrative${i}`);
+    if (popup) popup.classList.remove('show');
+  });
   initScenarios();
   goto(1);
 }
@@ -2611,8 +2618,69 @@ function hideLeaderForm() {
   if (form) form.style.display = 'none';
   if (buttons) buttons.style.display = '';
 }
+/* ============================================================
+   SIGNUP SUBMISSIONS — POST to /api/signup (Vercel function)
+============================================================ */
+async function submitSignup({ formId, source, emailInputId, updatesInputId, submitLabel }) {
+  const formEl    = document.getElementById(formId);
+  if (!formEl) return;
+  const emailEl   = document.getElementById(emailInputId);
+  const updatesEl = document.getElementById(updatesInputId);
+  const submitBtn = formEl.querySelector('button[type="submit"]');
+  const email = (emailEl?.value || '').trim();
+  if (!email) return;
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Sending…'; }
+
+  try {
+    const res = await fetch('/api/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        pathway:     state.problem || 'unknown',
+        studentName: state.studentName || '',
+        source,
+        sendUpdates: !!updatesEl?.checked,
+      }),
+    });
+    if (!res.ok) throw new Error('Signup failed: ' + res.status);
+    showSignupSuccess(formEl, source, email);
+  } catch (e) {
+    console.error('[signup]', e);
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = submitLabel; }
+    alert('Sorry — something went wrong. Please try again, or email us directly.');
+  }
+}
+
+function submitTeacherForm() {
+  submitSignup({
+    formId: 'teacherForm',
+    source: 'teacher',
+    emailInputId: 'signupEmail',
+    updatesInputId: 'signupUpdates',
+    submitLabel: 'Start my free trial',
+  });
+}
+
 function submitLeaderForm() {
-  alert('Prototype — in production this emails the leadership pack.');
+  submitSignup({
+    formId: 'leaderForm',
+    source: 'leader',
+    emailInputId: 'leaderEmail',
+    updatesInputId: 'leaderUpdates',
+    submitLabel: 'Send overview',
+  });
+}
+
+function showSignupSuccess(formEl, source, email) {
+  const message = source === 'leader'
+    ? `Your overview is on its way to <strong>${email}</strong>. We'll follow up shortly.`
+    : `We've sent a welcome to <strong>${email}</strong>. Check your inbox in a minute.`;
+  formEl.innerHTML = `
+    <div style="text-align:center; padding: 8px 4px;">
+      <h2 style="font-size:22px; margin-bottom:10px;">You're in.</h2>
+      <p style="color:var(--ink-soft); line-height:1.55;">${message}</p>
+    </div>`;
 }
 
 function applyName() {
