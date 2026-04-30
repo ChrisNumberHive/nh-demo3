@@ -301,8 +301,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    margin: 0 0 6px;
+    gap: 4px;
+    margin: 0 0 2px;
   }
   .board-row .board-wrap { flex: 0 1 auto; }
   .board-row .scenario-prompt {
@@ -558,7 +558,7 @@
     display: none;
     align-items: center;
     gap: 14px;
-    margin: 10px auto 8px;
+    margin: 2px auto 6px;
     max-width: 480px;
     width: 100%;
     background: #fff;
@@ -608,7 +608,7 @@
   .screen.narrative-mode .context-card,
   .screen.narrative-mode .scenario-prompt { display: none; }
   .screen.narrative-mode .numpads {
-    opacity: 0.25;
+    opacity: 1;
     pointer-events: none;
     transition: opacity 0.3s ease;
   }
@@ -1712,10 +1712,10 @@ const NARRATIVES = {
   1: {
     base: [
       { text: "{NAME} needs 20 to win",       boardCells: [20] },
-      { text: "They know 4 × 5 = 20",          boardCells: [4, 5, 20] },
+      { text: "They know 4 × 5 = 20",          boardCells: [20], padCells: { pad1: 4, pad2: 5 } },
       { text: "But the pads have 2 and 9",     padCells: { pad1: 2, pad2: 9 } },
       { text: "So they rethink" },
-      { text: "2 × 10 also makes 20",          boardCells: [10, 20] },
+      { text: "2 × 10 also makes 20",          boardCells: [20], padCells: { pad1: 2, pad2: 10 } },
       { text: "Same answer. Different factors" }
     ],
     pathwayFinal: {
@@ -1819,7 +1819,7 @@ const HEX_SIZE = 17;
 const HEX_W = Math.sqrt(3) * HEX_SIZE;
 const HEX_H = 2 * HEX_SIZE;
 const HEX_V_SPACING = HEX_H * 0.75;
-const BOARD_ORIGIN_X = 20;
+const BOARD_ORIGIN_X = 42;
 const BOARD_ORIGIN_Y = 20;
 
 function hexPoints(cx, cy, r) {
