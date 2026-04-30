@@ -301,12 +301,12 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
-    margin: 0 0 2px;
+    gap: 0;
+    margin: 0;
   }
   .board-row .board-wrap { flex: 0 1 auto; }
   .board-row .scenario-prompt {
-    margin: 0;
+    margin: -2px 0 2px;
     width: 100%;
     max-width: 540px;
   }
@@ -351,7 +351,7 @@
     background: var(--cream-warm);
     border-radius: 12px;
     flex-wrap: wrap;
-    margin-top: 6px;
+    margin-top: 4px;
   }
   .numpad {
     display: grid;
@@ -558,7 +558,7 @@
     display: none;
     align-items: center;
     gap: 14px;
-    margin: 2px auto 6px;
+    margin: -2px auto 4px;
     max-width: 480px;
     width: 100%;
     background: #fff;
@@ -1718,18 +1718,18 @@ const SCENARIOS = {
 const NARRATIVES = {
   1: {
     base: [
-      { text: "Needs 20 to win",              boardCells: [20] },
-      { text: "Knows 4 × 5",                  padCells: { pad1: 4, pad2: 5 } },
-      { text: "But must use 2 or 9",           padCells: { pad1: 2, pad2: 9 } },
-      { text: "…so they rethink",             pauseAfter: 750 },
-      { text: "2 × 10",                       padCells: { pad1: 2, pad2: 10 } },
-      { text: "Same answer. Different pathway.", boardCells: [20] }
+      { text: "{NAME} needs 20 to get 4 in a row", boardCells: [20] },
+      { text: "They know 4 × 5 = 20",              padCells: { pad1: 4, pad2: 5 } },
+      { text: "But they can only change one number pad. So they must use a 2 or 9.", padCells: { pad1: 2, pad2: 9 } },
+      { text: "…so they rethink",                  pauseAfter: 750 },
+      { text: "🤔 Does 2 divide into 20? Yes! 10 times! So 2 × 10 = 20", padCells: { pad1: 2, pad2: 10 } },
+      { text: "Same answer. Different pathway.",   boardCells: [20] }
     ],
     pathwayFinal: {
-      apply:    "This is flexible fluency.",
-      counting: "Useful facts get remembered.",
-      freeze:   "The context changed. They adapted.",
-      speed:    "Understanding beats guessing."
+      apply:    "Make the move below for {NAME}",
+      counting: "Make the move below for {NAME}",
+      freeze:   "Make the move below for {NAME}",
+      speed:    "Make the move below for {NAME}"
     }
   },
   2: {
@@ -1764,7 +1764,7 @@ const NARRATIVES = {
 const MESSAGES = {
   1: {
     win: {
-      apply:    { h: "✓ Exactly right.",      b: "{NAME} spotted that 2×10=20 completed 4 in a row for the win. That's applying facts — not just recall." },
+      apply:    { h: "This is flexible fluency.",      b: "{NAME} spotted that 2×10=20 completed 4 in a row for the win. That's applying facts — not just recall." },
       counting: { h: "✓ Multiplicative thinking.", b: "{NAME} used factor knowledge and reciprocal relationships to take the winning cell. They do this multiple times each game! Repetition and retrieval practice builds fluency and quick recall." },
       freeze:   { h: "✓ Flexible thinking.",  b: "{NAME} was able to think flexibly in a new setting to solve the problem and win the game." },
       speed:    { h: "✓ Chosen, not rushed.",  b: "{NAME} reasoned about which factor change actually wins — not the first thing that came to mind. That's understanding made visible." }
@@ -2390,7 +2390,7 @@ function showNarrativeStep(scenarioIdx, stepIdx) {
 
   const btn = popup.querySelector('.next-btn');
   btn.disabled = false;
-  btn.textContent = isFinal ? 'Play it →' : 'Next →';
+  btn.textContent = isFinal ? (scenarioIdx === 1 ? 'OK →' : 'Play it →') : 'Next →';
   btn.onclick = () => {
     if (isFinal) {
       endNarrative(scenarioIdx);
