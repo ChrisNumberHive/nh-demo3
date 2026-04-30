@@ -603,13 +603,29 @@
     to   { opacity: 1; transform: translate(-50%, 0); }
   }
 
-  /* While narrative is running, dim the pads + hide the coaching tip */
+  /* While narrative is running, hide the redundant static framing
+     (title, lead, context card, coaching tip) and dim the pads.
+     The popup carries the narration; the board + popup are the only voices. */
+  .screen.narrative-mode .eyebrow,
+  .screen.narrative-mode > h2,
+  .screen.narrative-mode > p.meta,
+  .screen.narrative-mode > p.lead,
+  .screen.narrative-mode .context-card,
+  .screen.narrative-mode .scenario-prompt { display: none; }
   .screen.narrative-mode .numpads {
     opacity: 0.25;
     pointer-events: none;
     transition: opacity 0.3s ease;
   }
-  .screen.narrative-mode .scenario-prompt { display: none; }
+  /* Smooth re-entry of static text once narrative ends */
+  .screen .eyebrow,
+  .screen > h2,
+  .screen > p.meta,
+  .screen > p.lead,
+  .screen .context-card,
+  .screen .scenario-prompt {
+    transition: opacity 0.3s ease;
+  }
 
   /* Pulse sync — temporary highlight on board cells and pad cells */
   @keyframes nhPulse {
@@ -2336,9 +2352,10 @@ function goto(n) {
   if (n === 6) renderMgrid();
   if (n === 7) renderMindset();
   if (n === 8) renderEcho();
-  // Scenario screens get the narrative walkthrough first
-  if (n === 3 || n === 4 || n === 5) {
-    startNarrative(n - 2);
+  // Scenario 1 only gets the narrative walkthrough (introduces the idea once);
+  // scenarios 2 and 3 trust the teacher to play directly with static framing.
+  if (n === 3) {
+    startNarrative(1);
   }
 }
 
