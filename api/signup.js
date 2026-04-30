@@ -136,9 +136,14 @@ export default async function handler(req, res) {
           `— The Number Hive team`,
         ].join('\n');
 
-    // Convert URLs into real <a> links for the HTML version, then turn newlines into <br>.
+    // Markdown-style links: [text](https://url) → "text (https://url)" in plain text,
+    //                                              <a href="...">text</a> in HTML.
+    // Bare URLs also auto-link in HTML.
+    const mdLink = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+    const textBody = body.replace(mdLink, '$1 ($2)');
     const htmlBody = body
-      .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1">$1</a>')
+      .replace(mdLink, '<a href="$2">$1</a>')
+      .replace(/(?<!href=")(https?:\/\/[^\s<]+)/g, '<a href="$1">$1</a>')
       .replace(/\n/g, '<br>');
 
     await sgMail.send({
@@ -146,7 +151,7 @@ export default async function handler(req, res) {
       from: { email: process.env.SENDGRID_FROM_EMAIL, name: 'Number Hive' },
       replyTo: process.env.SENDGRID_FROM_EMAIL,
       subject,
-      text: body,
+      text: textBody,
       html: htmlBody,
     });
     result.sendgrid = true;
