@@ -553,15 +553,14 @@
     100% { opacity: 1; transform: scale(1); }
   }
 
-  /* Step-based narrative popup — shown before the teacher plays each scenario */
+  /* Step-based narrative popup — sits in flow between the hive and the pads */
   .narrative-popup {
-    position: absolute;
-    left: 50%;
-    bottom: 16px;
-    transform: translateX(-50%);
     display: none;
     align-items: center;
     gap: 14px;
+    margin: 10px auto 8px;
+    max-width: 480px;
+    width: 100%;
     background: #fff;
     border: 1.5px solid var(--honey-deep);
     border-radius: 14px;
@@ -570,10 +569,8 @@
     color: var(--ink);
     font-weight: 500;
     line-height: 1.4;
-    box-shadow: 0 12px 32px rgba(31, 41, 55, 0.18);
-    z-index: 30;
-    max-width: 480px;
-    width: calc(100% - 32px);
+    box-shadow: 0 8px 22px rgba(31, 41, 55, 0.14);
+    z-index: 5;
   }
   .narrative-popup.show {
     display: flex;
@@ -599,15 +596,13 @@
     transform: translateY(-1px);
   }
   @keyframes narrSlide {
-    from { opacity: 0; transform: translate(-50%, 10px); }
-    to   { opacity: 1; transform: translate(-50%, 0); }
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* While narrative is running, hide the redundant static framing
-     (title, lead, context card, coaching tip) and dim the pads.
-     The popup carries the narration; the board + popup are the only voices. */
+  /* During narrative: keep H2 heading + board + popup visible.
+     Hide eyebrow, lead, context card, coaching tip; dim the pads. */
   .screen.narrative-mode .eyebrow,
-  .screen.narrative-mode > h2,
   .screen.narrative-mode > p.meta,
   .screen.narrative-mode > p.lead,
   .screen.narrative-mode .context-card,
@@ -617,31 +612,26 @@
     pointer-events: none;
     transition: opacity 0.3s ease;
   }
-  /* Smooth re-entry of static text once narrative ends */
-  .screen .eyebrow,
-  .screen > h2,
-  .screen > p.meta,
-  .screen > p.lead,
-  .screen .context-card,
-  .screen .scenario-prompt {
-    transition: opacity 0.3s ease;
-  }
 
-  /* Pulse sync — temporary highlight on board cells and pad cells */
+  /* Pulse sync — stronger highlight on key cells and pads */
   @keyframes nhPulse {
     0%, 100% { filter: drop-shadow(0 0 0 rgba(245, 184, 37, 0)); transform: scale(1); }
-    50%      { filter: drop-shadow(0 0 10px rgba(245, 184, 37, 0.85)); transform: scale(1.1); }
+    50%      { filter: drop-shadow(0 0 18px rgba(245, 184, 37, 1)); transform: scale(1.22); }
   }
   .hex.narr-pulse {
-    animation: nhPulse 0.9s ease-in-out 2;
+    animation: nhPulse 0.85s ease-in-out 3;
     transform-origin: center;
     transform-box: fill-box;
   }
   @keyframes nhPadPulse {
     0%, 100% { box-shadow: 0 0 0 0 rgba(245, 184, 37, 0); transform: scale(1); }
-    50%      { box-shadow: 0 0 0 4px rgba(245, 184, 37, 0.5); transform: scale(1.08); }
+    50%      { box-shadow: 0 0 0 7px rgba(245, 184, 37, 0.7); transform: scale(1.18); }
   }
-  .pad-cell.narr-pulse { animation: nhPadPulse 0.9s ease-in-out 2; }
+  .pad-cell.narr-pulse {
+    animation: nhPadPulse 0.85s ease-in-out 3;
+    position: relative;
+    z-index: 2;
+  }
 
   /* Caption overlay (feedback after move — pops up over the board) */
   .caption {
@@ -1205,10 +1195,10 @@
             <div><strong>Your student can change only one number pad.</strong> Which factor should they change? They need a product of <strong>20</strong>.</div>
           </div>
         </div>
+        <div class="narrative-popup" id="narrative1"><div class="text"></div><button class="next-btn" type="button"></button></div>
         <div class="numpads" id="pads1"></div>
         <div class="caption" id="caption1"></div>
         <div class="win-banner" id="winBanner1"><span>Won!</span></div>
-        <div class="narrative-popup" id="narrative1"><div class="text"></div><button class="next-btn" type="button"></button></div>
       </div>
     </section>
 
@@ -1234,10 +1224,10 @@
             <div>What are the factors of <strong>28</strong>? Do we already have one on a pad?</div>
           </div>
         </div>
+        <div class="narrative-popup" id="narrative2"><div class="text"></div><button class="next-btn" type="button"></button></div>
         <div class="numpads" id="pads2"></div>
         <div class="caption" id="caption2"></div>
         <div class="win-banner" id="winBanner2"><span>Won!</span></div>
-        <div class="narrative-popup" id="narrative2"><div class="text"></div><button class="next-btn" type="button"></button></div>
       </div>
     </section>
 
@@ -1263,9 +1253,9 @@
             <div>Player 2 needs <strong>18</strong>. What can your student leave safely? (18 = 2×9 = 3×6)</div>
           </div>
         </div>
+        <div class="narrative-popup" id="narrative3"><div class="text"></div><button class="next-btn" type="button"></button></div>
         <div class="numpads" id="pads3"></div>
         <div class="caption" id="caption3"></div>
-        <div class="narrative-popup" id="narrative3"><div class="text"></div><button class="next-btn" type="button"></button></div>
       </div>
     </section>
 
