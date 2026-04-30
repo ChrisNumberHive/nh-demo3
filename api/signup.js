@@ -3,6 +3,7 @@
 
 import { MongoClient } from 'mongodb';
 import sgMail from '@sendgrid/mail';
+import crypto from 'node:crypto';
 
 // Cached Mongo client — keeps the connection warm across invocations.
 let cachedClient = null;
@@ -56,33 +57,48 @@ export default async function handler(req, res) {
     console.error('[mongo]', e.message);
   }
 
-  // 2. Mailchimp — only if user opted in
+  // 2. Mailchimp — upsert member, then add tags so they accumulate across visits.
   if (sendUpdates) {
     try {
       const dc = process.env.MAILCHIMP_DC;
       const listId = process.env.MAILCHIMP_LIST_ID;
       const auth = Buffer.from('any:' + process.env.MAILCHIMP_API_KEY).toString('base64');
-      const r = await fetch(`https://${dc}.api.mailchimp.com/3.0/lists/${listId}/members`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` },
-        body: JSON.stringify({
-          email_address: email,
-          status: 'subscribed',
-          tags: [`demo-${source}`, `demo-pathway-${pathway}`],
-          merge_fields: studentName ? { FNAME: studentName } : undefined,
-        }),
-      });
-      // Mailchimp returns 400 with title 'Member Exists' if email already subscribed — count as success.
-      if (r.ok) {
-        result.mailchimp = true;
-      } else {
-        const txt = await r.text();
-        if (r.status === 400 && txt.includes('Member Exists')) {
-          result.mailchimp = true;
-        } else {
-          console.error('[mailchimp]', r.status, txt);
-        }
+      const subscriberHash = crypto
+        .createHash('md5')
+        .update(email.toLowerCase().trim())
+        .digest('hex');
+      const headers = { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` };
+
+      // Upsert member (creates if new, updates if exists; doesn't touch tags here)
+      const upsertBody = {
+        email_address: email,
+        status_if_new: 'subscribed',
+      };
+      if (studentName) upsertBody.merge_fields = { FNAME: studentName };
+      const upsert = await fetch(
+        `https://${dc}.api.mailchimp.com/3.0/lists/${listId}/members/${subscriberHash}`,
+        { method: 'PUT', headers, body: JSON.stringify(upsertBody) }
+      );
+      if (!upsert.ok) {
+        console.error('[mailchimp upsert]', upsert.status, await upsert.text());
+        throw new Error('upsert failed');
       }
+
+      // Apply tags additively (Mailchimp merges with existing tags on this endpoint)
+      const tagBody = {
+        tags: [
+          { name: `demo-${source}`, status: 'active' },
+          { name: `demo-pathway-${pathway}`, status: 'active' },
+        ],
+      };
+      const tagRes = await fetch(
+        `https://${dc}.api.mailchimp.com/3.0/lists/${listId}/members/${subscriberHash}/tags`,
+        { method: 'POST', headers, body: JSON.stringify(tagBody) }
+      );
+      if (!tagRes.ok && tagRes.status !== 204) {
+        console.error('[mailchimp tags]', tagRes.status, await tagRes.text());
+      }
+      result.mailchimp = true;
     } catch (e) {
       console.error('[mailchimp]', e.message);
     }
