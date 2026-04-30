@@ -1,0 +1,10 @@
+{
+  "name": "nh-demo3",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "mongodb": "^6.5.0",
+    "@sendgrid/mail": "^8.1.3"
+  }
+}
