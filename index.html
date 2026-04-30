@@ -301,7 +301,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 2px;
     margin: 0 0 2px;
   }
   .board-row .board-wrap { flex: 0 1 auto; }
@@ -601,7 +601,7 @@
   }
 
   /* During narrative: keep H2 heading + board + popup visible.
-     Hide eyebrow, lead, context card, coaching tip; dim the pads. */
+     Hide eyebrow, lead, context card, coaching tip. Keep pads fully visible. */
   .screen.narrative-mode .eyebrow,
   .screen.narrative-mode > p.meta,
   .screen.narrative-mode > p.lead,
@@ -611,6 +611,13 @@
     opacity: 1;
     pointer-events: none;
     transition: opacity 0.3s ease;
+  }
+  .narrative-popup.single-moment .next-btn { display: none; }
+  .narrative-popup.single-moment {
+    justify-content: center;
+    text-align: center;
+    font-size: 17px;
+    font-weight: 600;
   }
 
   /* Pulse sync — stronger highlight on key cells and pads */
@@ -1711,18 +1718,18 @@ const SCENARIOS = {
 const NARRATIVES = {
   1: {
     base: [
-      { text: "{NAME} needs 20 to win",       boardCells: [20] },
-      { text: "They know 4 × 5 = 20",          boardCells: [20], padCells: { pad1: 4, pad2: 5 } },
-      { text: "But the pads have 2 and 9",     padCells: { pad1: 2, pad2: 9 } },
-      { text: "So they rethink" },
-      { text: "2 × 10 also makes 20",          boardCells: [20], padCells: { pad1: 2, pad2: 10 } },
-      { text: "Same answer. Different factors" }
+      { text: "Needs 20 to win",              boardCells: [20] },
+      { text: "Knows 4 × 5",                  padCells: { pad1: 4, pad2: 5 } },
+      { text: "But must use 2 or 9",           padCells: { pad1: 2, pad2: 9 } },
+      { text: "…so they rethink",             pauseAfter: 750 },
+      { text: "2 × 10",                       padCells: { pad1: 2, pad2: 10 } },
+      { text: "Same answer. Different pathway.", boardCells: [20] }
     ],
     pathwayFinal: {
-      apply:    "This is flexible fluency in action",
-      counting: "Repeated use strengthens fact recall",
-      freeze:   "They learn to adapt when things change",
-      speed:    "They use relationships, not just memory"
+      apply:    "This is flexible fluency.",
+      counting: "Useful facts get remembered.",
+      freeze:   "The context changed. They adapted.",
+      speed:    "Understanding beats guessing."
     }
   },
   2: {
@@ -1743,14 +1750,7 @@ const NARRATIVES = {
   },
   3: {
     base: [
-      { text: "Player 2 can win with 18",      boardCells: [18, 42, 55, 144] },
-      { text: "Usually, {NAME} would block" },
-      { text: "But this time, they can't" },
-      { text: "So the question changes" },
-      { text: "What must they avoid leaving?" },
-      { text: "Factors of 18 are dangerous" },
-      { text: "They choose a safe move" },
-      { text: "They block the next move instead" }
+      { text: "They can’t block…<br>so they control what happens next." }
     ],
     pathwayFinal: {
       apply:    "They think flexibly across multiple moves",
@@ -1819,7 +1819,7 @@ const HEX_SIZE = 17;
 const HEX_W = Math.sqrt(3) * HEX_SIZE;
 const HEX_H = 2 * HEX_SIZE;
 const HEX_V_SPACING = HEX_H * 0.75;
-const BOARD_ORIGIN_X = 42;
+const BOARD_ORIGIN_X = 20;
 const BOARD_ORIGIN_Y = 20;
 
 function hexPoints(cx, cy, r) {
@@ -2342,13 +2342,12 @@ function goto(n) {
   if (n === 6) renderMgrid();
   if (n === 7) renderMindset();
   if (n === 8) renderEcho();
-  // Scenario 1 gets the full narrative walkthrough.
-  // Scenario 3 gets one lightweight insight popup because the idea is deeper.
+  // Scenario 1 gets the guided walkthrough. Scenario 3 gets one short magic-moment popup.
   if (n === 3) {
     startNarrative(1);
   }
   if (n === 5) {
-    startScenario3MiniPopup();
+    setTimeout(() => showSingleMomentPopup(3), 350);
   }
 }
 
@@ -2390,10 +2389,14 @@ function showNarrativeStep(scenarioIdx, stepIdx) {
   if (step.padCells)   pulsePadCells(scenarioIdx, step.padCells);
 
   const btn = popup.querySelector('.next-btn');
+  btn.disabled = false;
   btn.textContent = isFinal ? 'Play it →' : 'Next →';
   btn.onclick = () => {
     if (isFinal) {
       endNarrative(scenarioIdx);
+    } else if (step.pauseAfter) {
+      btn.disabled = true;
+      setTimeout(() => showNarrativeStep(scenarioIdx, stepIdx + 1), step.pauseAfter);
     } else {
       showNarrativeStep(scenarioIdx, stepIdx + 1);
     }
@@ -2407,27 +2410,38 @@ function endNarrative(scenarioIdx) {
   if (popup) popup.classList.remove('show');
 }
 
-/* Lightweight Scenario 3 popup — keeps the static page visible,
-   but briefly names the deeper strategic idea before play. */
-function startScenario3MiniPopup() {
-  const popup = document.getElementById('narrative3');
+function showSingleMomentPopup(scenarioIdx) {
+  const popup = document.getElementById(`narrative${scenarioIdx}`);
   if (!popup) return;
-
+  popup.classList.add('single-moment');
+  popup.querySelector('.text').innerHTML = "They can’t block…<br>so they control what happens next.";
+  const btn = popup.querySelector('.next-btn');
+  if (btn) btn.textContent = '';
   popup.classList.remove('show');
   void popup.offsetWidth;
-  popup.querySelector('.text').textContent = fillName(
-    "They can’t block this turn, so they avoid leaving factors of 18."
-  );
-
-  const btn = popup.querySelector('.next-btn');
-  btn.textContent = 'Got it →';
-  btn.onclick = () => popup.classList.remove('show');
-
   popup.classList.add('show');
 
-  // Draw attention to the threat, then the dangerous factors on the pads.
-  pulseBoardCells(3, [18, 42, 55, 144]);
-  setTimeout(() => pulsePadValues(3, [2, 3, 6, 9]), 450);
+  pulseBoardCells(scenarioIdx, [18, 42, 55, 144]);
+  setTimeout(() => pulsePadValuesAll(scenarioIdx, [2, 3, 6, 9]), 850);
+
+  setTimeout(() => {
+    popup.classList.remove('show');
+    setTimeout(() => popup.classList.remove('single-moment'), 350);
+  }, 3800);
+}
+
+function pulsePadValuesAll(scenarioIdx, values) {
+  ['pad1', 'pad2'].forEach(padKey => {
+    const padContainer = document.getElementById(`pads${scenarioIdx}-${padKey}`);
+    if (!padContainer) return;
+    values.forEach(value => {
+      const cell = padContainer.querySelector(`.pad-cell[data-value="${value}"]`);
+      if (!cell) return;
+      cell.classList.remove('narr-pulse');
+      void cell.offsetWidth;
+      cell.classList.add('narr-pulse');
+    });
+  });
 }
 
 function pulseBoardCells(scenarioIdx, products) {
@@ -2451,20 +2465,6 @@ function pulsePadCells(scenarioIdx, padCells) {
     cell.classList.remove('narr-pulse');
     void cell.offsetWidth;
     cell.classList.add('narr-pulse');
-  });
-}
-
-function pulsePadValues(scenarioIdx, values) {
-  ['pad1', 'pad2'].forEach(padKey => {
-    const padContainer = document.getElementById(`pads${scenarioIdx}-${padKey}`);
-    if (!padContainer) return;
-    values.forEach(value => {
-      const cell = padContainer.querySelector(`.pad-cell[data-value="${value}"]`);
-      if (!cell) return;
-      cell.classList.remove('narr-pulse');
-      void cell.offsetWidth;
-      cell.classList.add('narr-pulse');
-    });
   });
 }
 
@@ -2503,10 +2503,6 @@ function restart() {
   [1,2,3].forEach(i => {
     const cap = document.getElementById('caption' + i);
     if (cap) { cap.className = 'caption'; cap.innerHTML = ''; }
-    const narr = document.getElementById('narrative' + i);
-    if (narr) narr.classList.remove('show');
-    const screen = document.getElementById('s' + (i + 2));
-    if (screen) screen.classList.remove('narrative-mode');
     hideWinBanner(i);
   });
   // Reset name input + chips
@@ -2592,72 +2588,24 @@ function applyName() {
 /* Customize scenario titles, leads, and hints based on the teacher's chosen pathway */
 const PATHWAY_CONTENT = {
   apply: {
-    3: {
-      title: "Can they apply what they know?",
-      lead:  "4 in a row wins the game. There's a winning move on the board. Help them find it.",
-      hint:  '<strong>{NAME} can change only one number pad.</strong> Which factor should they change? They need a product of <strong>20</strong>.'
-    },
-    4: {
-      title: "Can they think defensively?",
-      lead:  "Player 2 can win by taking the 28 cell. Facts alone won't save {name} — they need strategy.",
-      hint:  'What are the factors of <strong>28</strong>? Is one already on a number pad?'
-    },
-    5: {
-      title: "Can they apply factors and multiples knowledge when it counts?",
-      lead:  "Player 2 can win with 18. {NAME} can't block this time, so how can they prevent Player 2 from getting 4 in a row?",
-      hint:  '{NAME} can\'t block this time because they don\'t have any of the factors of 18 available. They need to make sure they don\'t leave any of those factors for Player 2 to use.'
-    }
+    3: { title: "Can they rethink what they know?", lead: "", hint: '<strong>Change one pad.</strong> Make <strong>20</strong> to complete 4 in a row.' },
+    4: { title: "Can they defend with number facts?", lead: "Player 2 is about to win…", hint: 'Make <strong>28</strong> to block the line.' },
+    5: { title: "Can they think one move ahead?", lead: "", hint: 'Do not leave <strong>2, 3, 6 or 9</strong> on either number pad.' }
   },
   counting: {
-    3: {
-      title: "Can they reason multiplicatively?",
-      lead:  "Counting strategies can take too long. This impacts when solving larger problems and can increase cognitive load.",
-      hint:  '4 in a row gets the win. What factors below make the product of <strong>20</strong>?'
-    },
-    4: {
-      title: "Can they use Number Facts in a timely manner?",
-      lead:  "Player 2 just needs 28 for the win. Recall the factors of 28 in order to block the attack.",
-      hint:  'What factors make the product of <strong>28</strong>? Which number pad needs to be changed?'
-    },
-    5: {
-      title: "Can they hold the facts in mind?",
-      lead:  "Player 2 needs 18 to win. But it cannot be taken this turn. Which factors are safe to leave on the number pads to ensure Player 2 can't get the win?",
-      hint:  'What are the factors of <strong>18</strong>? {NAME} can\'t leave any of those available on the number pads!'
-    }
+    3: { title: "Can they recall facts when they matter?", lead: "", hint: '<strong>Change one pad.</strong> Make <strong>20</strong> to complete 4 in a row.' },
+    4: { title: "Can they use recall to defend?", lead: "Player 2 is about to win…", hint: 'Make <strong>28</strong> to block the line.' },
+    5: { title: "Can they hold factor pairs in mind?", lead: "", hint: 'Do not leave <strong>2, 3, 6 or 9</strong> on either number pad.' }
   },
   freeze: {
-    3: {
-      title: "Can they use Number facts in a new context?",
-      lead:  "Player 2 just changed one of the number pads to take the 18 cell (2 × 9 = 18). {NAME} needs 4 in a row to take the win.",
-      hint:  '{NAME} sees that <strong>20</strong> gets them the win. Can they use factors within this game context to make the product 20?'
-    },
-    4: {
-      title: "Can they use known facts in a new unknown scenario?",
-      lead:  "This time, it's time to defend!",
-      hint:  'What factors make the product <strong>28</strong> to block?'
-    },
-    5: {
-      title: "Can they solve problems with multiple layers?",
-      lead:  "Player 2 needs 18 to win. This time, {NAME} can't block like they did previously!",
-      hint:  '{NAME} can\'t leave any factors of <strong>18</strong> for Player 2 to use for the win.'
-    }
+    3: { title: "Can they adapt when the numbers change?", lead: "", hint: '<strong>Change one pad.</strong> Make <strong>20</strong> to complete 4 in a row.' },
+    4: { title: "Can they stay calm and defend?", lead: "Player 2 is about to win…", hint: 'Make <strong>28</strong> to block the line.' },
+    5: { title: "Can they think ahead instead of freezing?", lead: "", hint: 'Do not leave <strong>2, 3, 6 or 9</strong> on either number pad.' }
   },
   speed: {
-    3: {
-      title: "Can they reason before they answer?",
-      lead:  "Speed won't find this win. {NAME} needs to slow down and think about which factor change actually takes the cell.",
-      hint:  '4 in a row gets the win. What factors below make the product of <strong>20</strong>? Don\'t guess — reason it out.'
-    },
-    4: {
-      title: "Can they pause long enough to defend?",
-      lead:  "Player 2 can win by taking the 28 cell. {NAME} can\'t react on instinct — they need to think about which factors actually block.",
-      hint:  'What factors make the product of <strong>28</strong> to block? Which number pad needs to be changed?'
-    },
-    5: {
-      title: "Can they think about consequences, not just facts?",
-      lead:  "Player 2 needs 18 to win. Knowing the facts isn't enough — {NAME} has to reason about which factors are dangerous to leave behind.",
-      hint:  'What are the factors of <strong>18</strong>? {NAME} can\'t leave any of those available on the number pads!'
-    }
+    3: { title: "Can they reason before they answer?", lead: "", hint: '<strong>Change one pad.</strong> Make <strong>20</strong> to complete 4 in a row.' },
+    4: { title: "Can they pause long enough to defend?", lead: "Player 2 is about to win…", hint: 'Make <strong>28</strong> to block the line.' },
+    5: { title: "Can they see consequences, not just answers?", lead: "", hint: 'Do not leave <strong>2, 3, 6 or 9</strong> on either number pad.' }
   }
 };
 
@@ -2665,26 +2613,10 @@ const PATHWAY_CONTENT = {
    Use {NAME} for capitalised name (or "Your student" fallback) and
    {name} for lowercase ("your student" fallback). */
 const CONTEXT_CARDS = {
-  apply: {
-    3: "You said students <strong>know facts but can't apply them flexibly</strong>. Watch what happens when {NAME} has to use that knowledge in a real game decision — the hive forces application, not just recall.",
-    4: "This is where it gets really interesting. {NAME} knows they need the 28 cell to block Player 2, but how can they make the product of 28 changing only one of the factors on the number pads?",
-    5: "This is a high level of flexible fluency: thinking through factor pairs while reasoning what numbers are safe to leave."
-  },
-  counting: {
-    3: "You said students struggle with quick recall. The game creates the need for students to retrieve facts, but in a low-stakes, engaging context. {NAME} doesn't feel tested, but they drive their own fluency progress. They need to make the product of 20 by changing one of the factors on the number pads.",
-    4: "Repeated retrieval practice, embedded in play. {NAME} will encounter the same facts dozens of times across a game without it feeling like drill.",
-    5: "By this point in the game, {NAME} has retrieved the 9×, 7× and 6× facts multiple times. That repetition builds the automaticity you're looking for in an engaging way."
-  },
-  freeze: {
-    3: "You said students freeze when context changes. The hive board randomises factor positions — there's no pattern to memorise. {NAME} has to reason afresh each time.",
-    4: "{NAME} cannot rely on rote memorization here. They need to read the game situation and apply multiplication knowledge to block the attack.",
-    5: "This is the scenario that challenges freezing most directly. When {NAME} reverts back to an old strategy, they are forced to reason more deeply. They want the product 18, but don't have any of its factors available."
-  },
-  speed: {
-    3: "You said students answer fast but don't really understand why. Watch what happens when {NAME} hits a real game decision — speed alone won't get them there. They need to slow down and reason about which factors actually win.",
-    4: "A student who answers on instinct won't see this block until it's too late. {NAME} needs to pause, read the threat, and reason about which factors actually reach 28.",
-    5: "This is the real test of understanding. {NAME} has to reason about which factors are dangerous to leave — not just retrieve a fact. Understanding, not speed."
-  }
+  apply: {},
+  counting: {},
+  freeze: {},
+  speed: {}
 };
 
 function fillName(str) {
@@ -2704,7 +2636,11 @@ function customizeScenarioPrompts() {
     const hintEl  = document.getElementById(`s${n}hint`);
     const ctxEl   = document.getElementById(`contextS${n}`);
     if (titleEl) titleEl.textContent = fillName(content[n].title);
-    if (leadEl)  leadEl.innerHTML    = fillName(content[n].lead);
+    if (leadEl) {
+      const leadText = fillName(content[n].lead);
+      leadEl.innerHTML = leadText;
+      leadEl.style.display = leadText.trim() ? '' : 'none';
+    }
     if (hintEl) {
       // Hint has an icon + text structure; preserve the icon div.
       hintEl.innerHTML = `<div class="icon">?</div><div>${fillName(content[n].hint)}</div>`;
