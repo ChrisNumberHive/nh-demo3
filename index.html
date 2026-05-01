@@ -202,6 +202,17 @@
   .btn.ghost:hover { background: var(--cream-warm); }
   .btn-arrow::after { content: "→"; margin-left: 4px; transition: transform 0.15s ease; }
   .btn.btn-arrow:hover::after { transform: translateX(3px); }
+  /* Click reliability guard */
+  button, .btn, .option, .pad-cell.clickable, .narrative-popup .next-btn {
+    touch-action: manipulation;
+  }
+  .screen.active button,
+  .screen.active .btn,
+  .screen.active .option,
+  .screen.active .narrative-popup.show,
+  .screen.active .narrative-popup.show .next-btn {
+    pointer-events: auto;
+  }
 
   /* Hook options */
   .options { display: grid; gap: 12px; margin-top: 28px; }
@@ -293,22 +304,20 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-    flex: 0 1 auto;
+    margin: 0;
+    flex: 0 1 540px;
     width: 100%;
   }
   .board-row {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     gap: 0;
     margin: 0;
   }
   .board-row .board-wrap { flex: 0 1 auto; }
   .board-row .scenario-prompt {
-    margin: 0;
+    margin: -2px 0 2px;
     width: 100%;
     max-width: 540px;
   }
@@ -560,7 +569,7 @@
     display: none;
     align-items: center;
     gap: 14px;
-    margin: 0 auto 4px;
+    margin: 6px auto 6px;
     max-width: 480px;
     width: 100%;
     background: #fff;
@@ -572,14 +581,14 @@
     font-weight: 500;
     line-height: 1.4;
     box-shadow: 0 8px 22px rgba(31, 41, 55, 0.14);
-    z-index: 5;
+    position: relative;
+    z-index: 80;
+    pointer-events: auto;
+    isolation: isolate;
   }
   .narrative-popup.show {
     display: flex;
     animation: narrSlide 0.35s ease both;
-  }
-  .narrative-popup.no-animation.show {
-    animation: none;
   }
   .narrative-popup .text { flex: 1; }
   .narrative-popup .next-btn {
@@ -588,12 +597,19 @@
     color: var(--ink);
     border: none;
     border-radius: 9px;
-    padding: 8px 16px;
+    padding: 10px 18px;
+    min-width: 86px;
+    min-height: 44px;
     font-family: inherit;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: transform 0.15s ease, background 0.15s ease;
+    position: relative;
+    z-index: 90;
+    pointer-events: auto;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0,0,0,0.08);
   }
   .narrative-popup .next-btn:hover {
     background: var(--honey-deep);
@@ -606,7 +622,7 @@
   }
 
   /* During narrative: keep H2 heading + board + popup visible.
-     Hide eyebrow, lead, context card, coaching tip; dim the pads. */
+     Hide eyebrow, lead, context card, coaching tip. Keep pads fully visible. */
   .screen.narrative-mode .eyebrow,
   .screen.narrative-mode > p.meta,
   .screen.narrative-mode > p.lead,
@@ -617,11 +633,13 @@
     pointer-events: none;
     transition: opacity 0.3s ease;
   }
-
-  /* Hard guard: no legacy context/coaching blocks in scenario walkthroughs */
-  #contextS3, #contextS4, #contextS5,
-  #s3hint, #s4hint, #s5hint,
-  #s3prompt, #s4prompt, #s5prompt { display: none !important; }
+  .narrative-popup.single-moment .next-btn { display: none; }
+  .narrative-popup.single-moment {
+    justify-content: center;
+    text-align: center;
+    font-size: 17px;
+    font-weight: 600;
+  }
 
   /* Pulse sync — stronger highlight on key cells and pads */
   @keyframes nhPulse {
@@ -1177,7 +1195,7 @@
         <p class="lead">Enter their first name — you'll see the demo through their experience.</p>
         <form class="name-form" onsubmit="event.preventDefault(); confirmName();">
           <input type="text" id="studentNameInput" placeholder="e.g. Jamie" maxlength="24" autocomplete="off">
-          <button type="submit" class="btn primary btn-arrow">Continue</button>
+          <button type="submit" class="btn primary btn-arrow">Continue →</button>
           <button type="button" class="skip" onclick="event.preventDefault(); event.stopPropagation(); skipName(); return false;">Skip — use a placeholder student</button>
         </form>
       </div>
@@ -1198,7 +1216,7 @@
         </div>
         <div class="board-row">
           <div class="board-wrap">
-            <svg id="board1" class="board-svg" viewBox="0 0 320 272"></svg>
+            <svg id="board1" class="board-svg" viewBox="0 0 320 320"></svg>
           </div>
           <div class="scenario-prompt" id="s3hint">
             <div class="icon">?</div>
@@ -1227,7 +1245,7 @@
         </div>
         <div class="board-row">
           <div class="board-wrap">
-            <svg id="board2" class="board-svg" viewBox="0 0 320 272"></svg>
+            <svg id="board2" class="board-svg" viewBox="0 0 320 320"></svg>
           </div>
           <div class="scenario-prompt" id="s4hint">
             <div class="icon">?</div>
@@ -1256,7 +1274,7 @@
         </div>
         <div class="board-row">
           <div class="board-wrap">
-            <svg id="board3" class="board-svg" viewBox="0 0 320 272"></svg>
+            <svg id="board3" class="board-svg" viewBox="0 0 320 320"></svg>
           </div>
           <div class="scenario-prompt" id="s5hint">
             <div class="icon">?</div>
@@ -1311,7 +1329,7 @@
     <!-- SCREEN 7: MINDSET TRACKING -->
     <section class="screen" id="s7">
       <div class="eyebrow">Beyond facts</div>
-      <h2>Their relationship with mathematics grows too.</h2>
+      <h2>Their relationship with maths grows too.</h2>
       <p class="lead" style="margin-top:10px; max-width:640px;">
         Validated surveys administered twice a year capture how students feel about themselves as mathematicians — not just what they can do.
       </p>
@@ -1347,7 +1365,7 @@
       <div style="margin-top:24px; max-width:620px;">
         <h1 id="closeHeadline">This is what strong number foundations look like.</h1>
         <p class="lead" style="margin-top:14px;" id="closeLead">
-          Not just knowing mathematics — but thinking with it.
+          Not just knowing maths — but thinking with it.
         </p>
       </div>
 
@@ -1369,12 +1387,12 @@
         <h2>You'll get:</h2>
         <div class="checks">
           <span>Your class set up and playing in minutes</span>
-          <span>Live insight into how your students are progressing</span>
+          <span>Live insight into how your students think</span>
           <span>A decision pack to share with colleagues</span>
           <span>An invite for 2–3 other teachers to trial alongside you</span>
         </div>
         <div class="btns">
-          <button class="btn primary btn-arrow" onclick="goto(11)">Try it with your class</button>
+          <button class="btn primary btn-arrow" onclick="goto(11)">Try it with your class →</button>
           <button class="btn ghost" onclick="goto(10)">For school leaders →</button>
         </div>
         <p class="meta" style="margin-top:14px; font-size:13px;">No prep. No training. Just start.</p>
@@ -1568,7 +1586,7 @@
       </div>
 
       <div id="leaderCtaButtons" style="margin-top:32px; display:flex; gap:12px; flex-wrap:wrap;">
-        <button class="btn primary btn-arrow" onclick="showLeaderForm()">Send leadership overview</button>
+        <button class="btn primary btn-arrow" onclick="showLeaderForm()">Send leadership overview →</button>
         <button class="btn ghost" onclick="goto(9)">← Back</button>
       </div>
 
@@ -1594,7 +1612,7 @@
         <p class="lead" style="margin-top:14px; max-width:520px; margin-left:auto; margin-right:auto;">
           Takes less than two minutes. No credit card, no commitment.
         </p>
-        <form class="signup-card" id="teacherForm" onsubmit="event.preventDefault(); submitTeacherForm();">
+        <form class="signup-card" onsubmit="event.preventDefault(); alert('Prototype — in production this lands in onboarding.');">
           <label for="signupEmail">Your school email address</label>
           <input type="email" id="signupEmail" placeholder="you@school.edu" required>
           <label class="check-row" for="signupUpdates">
@@ -1722,11 +1740,11 @@ const NARRATIVES = {
   1: {
     base: [
       { text: "{NAME} needs 20 to get 4 in a row", boardCells: [20] },
-      { text: "They know 4 × 5 = 20", padCells: { pad1: 4, pad2: 5 } },
+      { text: "They know 4 × 5 = 20",              padCells: { pad1: 4, pad2: 5 } },
       { text: "But they can only change one number pad. So they must use a 2 or 9.", padCells: { pad1: 2, pad2: 9 } },
-      { text: "…so they rethink", pauseAfter: 750 },
+      { text: "…so they rethink",                  pauseAfter: 750 },
       { text: "🤔 Does 2 divide into 20? Yes! 10 times! So 2 × 10 = 20", padCells: { pad1: 2, pad2: 10 } },
-      { text: "Same answer. Different pathway.", boardCells: [20] }
+      { text: "Same answer. Different pathway.",   boardCells: [20] }
     ],
     pathwayFinal: {
       apply:    "Make the move below for {NAME}",
@@ -1736,57 +1754,30 @@ const NARRATIVES = {
     }
   },
   2: {
-    noFinal: true,
     base: [
-      { text: "Player 2 is about to win with 28", boardCells: [28, 49, 63, 12] },
-      { text: "Can {NAME} block the attack?", boardCells: [28] },
-      { text: "Help {NAME} by changing one of the factors below", padCells: { pad1: 7, pad2: 4 } }
-    ]
+      { text: "Player 2 is about to win",      boardCells: [49, 63, 12] },
+      { text: "{NAME} needs to block",         boardCells: [28] },
+      { text: "But only if they can make that number" },
+      { text: "They scan their factors",       padCells: { pad1: 7, pad2: 6 } },
+      { text: "They find a way to block" },
+      { text: "Their maths just changed the game" }
+    ],
+    pathwayFinal: {
+      apply:    "They apply facts in real situations",
+      counting: "Facts become useful, not just memorised",
+      freeze:   "They stay calm and think under pressure",
+      speed:    "Correct answers now have purpose"
+    }
   },
   3: {
-    noFinal: true,
     base: [
-      { text: "{NAME} needs to block 18", boardCells: [18] },
-      { text: "But 5 and 7 (factors) can’t make 18 (product)", padCells: { pad1: 5, pad2: 7 } },
-      { text: "{NAME} must control the next move", pauseAfter: 500 },
-      { text: "Choose safe numbers so Player 2 can’t win", noAnimation: true }
-    ]
-  }
-};
-
-const LOCKED_FINAL_CAPTIONS = {
-  1: {
-    win: {
-      h: "This is flexible fluency.",
-      b: "{NAME} spotted that 2×10=20 completed 4 in a row for the win. That's applying facts — not just recall."
-    }
-  },
-  3: {
-    safe: {
-      h: "They couldn’t block the win… so they prevented it.",
-      b: "Students are reasoning with factors to control what happens next."
-    }
-  }
-};
-
-/* Pathway-specific educational value lines for locked final popups.
-   The headline stays locked so it cannot regress, while the body adapts
-   to the problem the teacher chose at the start. */
-const PATHWAY_FINAL_DETAILS = {
-  1: {
-    win: {
-      apply:    "{NAME} spotted that 2×10=20 completed 4 in a row. That’s applying facts, not just recalling them.",
-      counting: "{NAME} retrieved 2×10 because it mattered in the game. Purposeful repetition builds recall without feeling like drill.",
-      freeze:   "{NAME} adapted when 4×5 was not available. This gives students practice staying calm when numbers change.",
-      speed:    "{NAME} had to pause and reason with the relationship between 2 and 20. This shows understanding, not just speed."
-    }
-  },
-  3: {
-    safe: {
-      apply:    "Students are applying factor knowledge across two moves, not just using one fact at a time.",
-      counting: "Factor pairs become worth remembering because they shape what the opponent can do next.",
-      freeze:   "When the direct block is unavailable, students learn to reason forward instead of freezing.",
-      speed:    "This reveals whether students understand the factor relationships behind the answer."
+      { text: "They can’t block…<br>so they control what happens next." }
+    ],
+    pathwayFinal: {
+      apply:    "They think flexibly across multiple moves",
+      counting: "They build strong knowledge of factor pairs",
+      freeze:   "They learn to think ahead, not freeze",
+      speed:    "This reveals who truly understands"
     }
   }
 };
@@ -1794,50 +1785,50 @@ const PATHWAY_FINAL_DETAILS = {
 const MESSAGES = {
   1: {
     win: {
-      apply:    { h: "This is flexible fluency.", b: "{NAME} spotted that 2×10=20 completed 4 in a row. That’s applying facts, not just recalling them." },
-      counting: { h: "This builds useful recall.", b: "{NAME} retrieved 2×10 in a meaningful decision. Facts are repeated because the game gives them a reason to use them." },
-      freeze:   { h: "This builds adaptable thinking.", b: "{NAME} adapted when the obvious 4×5 pathway was not available. The game rewards staying with the problem." },
-      speed:    { h: "This shows understanding.", b: "{NAME} had to slow down and reason with the relationship between 2 and 20. Quick recall alone was not enough." }
+      apply:    { h: "This is flexible fluency.",      b: "{NAME} spotted that 2×10=20 completed 4 in a row for the win. That's applying facts — not just recall." },
+      counting: { h: "✓ Multiplicative thinking.", b: "{NAME} used factor knowledge and reciprocal relationships to take the winning cell. They do this multiple times each game! Repetition and retrieval practice builds fluency and quick recall." },
+      freeze:   { h: "✓ Flexible thinking.",  b: "{NAME} was able to think flexibly in a new setting to solve the problem and win the game." },
+      speed:    { h: "✓ Chosen, not rushed.",  b: "{NAME} reasoned about which factor change actually wins — not the first thing that came to mind. That's understanding made visible." }
     },
     winAlt: {
-      apply:    { h: "Same product, different factors.", b: "{NAME} found another pathway to the same win. They are using relationships, not just answers." },
-      counting: { h: "Two pathways to one product.", b: "{NAME} is meeting the same facts through purposeful play. That repeated use supports stronger recall." },
-      freeze:   { h: "Adapted under constraint.", b: "Two winning pairs existed. {NAME} found one instead of getting stuck on the first idea." },
-      speed:    { h: "Understanding made visible.", b: "{NAME} did not just answer quickly. They chose a pathway that actually won the game." }
+      apply:    { h: "✓ Same product, different factors.", b: "{NAME} found another path to the same win. They hold the relationships, not just the answers." },
+      counting: { h: "✓ Two ways to the same product.",    b: "{NAME} saw the second route. That's multiplicative thinking taking hold." },
+      freeze:   { h: "✓ Flexible fluency.",                 b: "Two winning pairs existed — {NAME} picked one and went. They didn't get stuck on the first idea." },
+      speed:    { h: "✓ Understanding made visible.",       b: "{NAME} didn't jump — they reasoned. That's the difference between speed and fluency." }
     },
     miss: {
-      apply:    { h: "Almost.", b: "A real move, but not the winning one. The strongest players ask which factors actually reach the target cell." },
-      counting: { h: "Not the win yet.", b: "Pause on the product {name} needs. Which factor change makes 20?" },
-      freeze:   { h: "Stay with it.", b: "The winning cell is reachable. This is the moment to rethink, not freeze." },
-      speed:    { h: "Slow it down.", b: "A quick move is not always the best move. Which product completes 4 in a row?" }
+      apply:    { h: "Almost.",      b: "A real move, but not a winning one. The strongest players spot which factors actually reach the target cell." },
+      counting: { h: "Not the win… yet.", b: "Worth pausing here: what product does {name} need? Which factor change makes it?" },
+      freeze:   { h: "Not the win… yet.", b: "The winning cell was reachable on this new board — {NAME} can find it with another look." },
+      speed:    { h: "Quick, not the win… yet.", b: "The best move here takes a beat of thought. Slow down — what product completes 4 in a row?" }
     }
   },
   2: {
     block: {
-      apply:    { h: "Facts became strategy.", b: "{NAME} used 7×4=28 to block the win. The fact mattered because it changed the game." },
-      counting: { h: "Recall with a purpose.", b: "{NAME} retrieved 7×4=28 at the moment it mattered. This is fact practice embedded in meaningful play." },
-      freeze:   { h: "Calm under pressure.", b: "{NAME} read the threat, found the factor pair, and blocked the win. The changing board became something to reason through." },
-      speed:    { h: "Deliberate, not reflexive.", b: "{NAME} paused long enough to notice the threat and choose the factor pair that actually defended the board." }
+      apply:    { h: "✓ Sharp defence.",     b: "{NAME} used 4×7=28 to block the win. Knowing the fact and applying it strategically — that's the difference." },
+      counting: { h: "✓ Fluency under pressure.", b: "{NAME} retrieved 4×7=28 in a real moment, not on a worksheet. That's fluency in context." },
+      freeze:   { h: "✓ Adapted to the board.",   b: "In a new scenario, {NAME} used their multiplication reasoning to solve the problem, and the threat is gone." },
+      speed:    { h: "✓ Deliberate, not reflex.", b: "{NAME} paused, recognised the threat, and chose the right factor pair to block 28. That's understanding overtaking instinct." }
     },
     "miss-block": {
-      apply:    { h: "Fact-correct, but not the block.", b: "Which factors actually reach 28? That is the application question {NAME} needs to ask." },
-      counting: { h: "Not the block.", b: "Player 2 needs 28. Which factor pair makes 28 from one pad change?" },
-      freeze:   { h: "The threat is still there.", b: "Player 2 is one move from winning. Stay with the board: which factor change claims 28?" },
-      speed:    { h: "Pause and read the board.", b: "What does Player 2 need? When {name} slows down to find the factor pair for 28, the block appears." }
+      apply:    { h: "Fact-correct, but not the block.", b: "Which factors actually reach 28? That's the question {NAME} needs to ask." },
+      counting: { h: "Not the block.",                   b: "Player 2 needs 28. What factor pair makes 28 from a single pad change?" },
+      freeze:   { h: "Threat still standing.",           b: "The opponent is one move from winning. Which factor change claims 28 and stops them?" },
+      speed:    { h: "Slow it down.", b: "What does Player 2 actually need? When {name} pauses to find the factor pair that reaches 28, the block appears." }
     }
   },
   3: {
     safe: {
-      apply:    { h: "They couldn’t block the win… so they prevented it.", b: "Students are applying factor knowledge across the current move and the next move." },
-      counting: { h: "They couldn’t block the win… so they prevented it.", b: "The factor pairs matter because they decide what Player 2 can do next." },
-      freeze:   { h: "They couldn’t block the win… so they prevented it.", b: "When the direct move is unavailable, students learn to reason forward instead of freezing." },
-      speed:    { h: "They couldn’t block the win… so they prevented it.", b: "This reveals whether students understand the factor relationships behind the answer." }
+      apply:    { h: "✓ That's the highest level.", b: "Thinking about what to leave, not just what to take. This is the application of flexible fluency from {NAME}." },
+      counting: { h: "✓ Reasoning about relationships.", b: "Not numbers in isolation — relationships between them. That's how students move beyond counting." },
+      freeze:   { h: "✓ Adapted to a new scenario.",      b: "{NAME} read the scenario, reasoned through the problem and prevented Player 2 from winning." },
+      speed:    { h: "✓ Understanding wins this one.",   b: "Knowing how factors connect can't be rushed. {NAME} reasoned about what to leave behind, not just what to take. That's understanding beating speed." }
     },
     leak: {
-      apply:    { h: "A factor was left open.", b: "Once that number is on a pad, Player 2 can reach 18 in one change. The strategy was in what {NAME} left behind." },
-      counting: { h: "The factor pair matters.", b: "2, 3, 6, and 9 are all factors of 18. Leaving any of them on the pads hands Player 2 the win." },
-      freeze:   { h: "The board looked safe, but the pads did not.", b: "When the numbers change, the threats change too. The pads matter as much as the cells." },
-      speed:    { h: "Quick move, strategic cost.", b: "This is where understanding beats speed. What factors make 18? Don’t leave them." }
+      apply:    { h: "Fact-correct, factor leaked.", b: "Once that number's on a pad, Player 2 can reach 18 in one change. The defence was in what {NAME} left behind." },
+      counting: { h: "Used the fact, missed the pad.", b: "2, 3, 6, and 9 are all factors of 18. Leaving any on the pads hands the win away." },
+      freeze:   { h: "The board looked safe — the pads didn't.", b: "When the numbers change, the threats change too. The pads matter as much as the cells." },
+      speed:    { h: "Quick move, strategic cost.", b: "This is where understanding beats speed. What factors make 18? Don't leave them." }
     }
   }
 };
@@ -1849,7 +1840,7 @@ const HEX_SIZE = 17;
 const HEX_W = Math.sqrt(3) * HEX_SIZE;
 const HEX_H = 2 * HEX_SIZE;
 const HEX_V_SPACING = HEX_H * 0.75;
-const BOARD_ORIGIN_X = 42;
+const BOARD_ORIGIN_X = 20;
 const BOARD_ORIGIN_Y = 20;
 
 function hexPoints(cx, cy, r) {
@@ -2315,15 +2306,10 @@ function showCaption(scenarioIdx, move) {
   let outcomeKey = move.outcome;
   if (scenarioIdx === 1 && move.outcome === 'win') outcomeKey = 'win';
 
-  // Resolve message: locked final captions win first, then caller-supplied custom messages, then pathway messages.
+  // Resolve message: caller-supplied custom message wins; else fall back to MESSAGES table.
   const msgs = MESSAGES[scenarioIdx] || {};
-  const locked = LOCKED_FINAL_CAPTIONS[scenarioIdx]?.[outcomeKey];
   let msg;
-  if (locked) {
-    msg = { ...locked };
-    const pathwayDetail = PATHWAY_FINAL_DETAILS[scenarioIdx]?.[outcomeKey]?.[theme];
-    if (pathwayDetail) msg.b = pathwayDetail;
-  } else if (move.customMessage) {
+  if (move.customMessage) {
     msg = move.customMessage;
   } else {
     msg = (msgs[outcomeKey] && msgs[outcomeKey][theme]) || msgs[outcomeKey]?.apply || { h: "Nice move.", b: "" };
@@ -2377,10 +2363,13 @@ function goto(n) {
   if (n === 6) renderMgrid();
   if (n === 7) renderMindset();
   if (n === 8) renderEcho();
-  // Guided popup walkthroughs for the three scenarios.
-  if (n === 3) startNarrative(1);
-  if (n === 4) startNarrative(2);
-  if (n === 5) startNarrative(3);
+  // Scenario 1 gets the guided walkthrough. Scenario 3 gets one short magic-moment popup.
+  if (n === 3) {
+    startNarrative(1);
+  }
+  if (n === 5) {
+    setTimeout(() => showSingleMomentPopup(3), 350);
+  }
 }
 
 /* ============================================================
@@ -2418,16 +2407,15 @@ function showNarrativeStep(scenarioIdx, stepIdx) {
     return;
   }
 
-  // Re-trigger slide animation each step, unless this step is intentionally still.
   popup.classList.remove('show', 'no-animation');
   clearNarrativeHighlights(scenarioIdx);
   if (step.noAnimation) popup.classList.add('no-animation');
   void popup.offsetWidth;
-  popup.querySelector('.text').textContent = fillName(step.text);
+
+  const textEl = popup.querySelector('.text');
+  if (textEl) textEl.textContent = fillName(step.text);
   popup.classList.add('show');
 
-  // Visual sync starts just after the popup appears, so the card stays the narrator.
-  // Steps marked noAnimation remain completely calm.
   if (!step.noAnimation) {
     setTimeout(() => {
       if (step.boardCells) pulseBoardCells(scenarioIdx, step.boardCells);
@@ -2437,9 +2425,12 @@ function showNarrativeStep(scenarioIdx, stepIdx) {
   }
 
   const btn = popup.querySelector('.next-btn');
+  if (!btn) return;
   btn.disabled = false;
   btn.textContent = (isFinal || isLastBaseStep) ? 'OK →' : 'Next →';
-  btn.onclick = () => {
+
+  const advanceNarrative = () => {
+    if (btn.disabled) return;
     if (isFinal || isLastBaseStep) {
       endNarrative(scenarioIdx);
     } else if (step.pauseAfter) {
@@ -2449,6 +2440,17 @@ function showNarrativeStep(scenarioIdx, stepIdx) {
       showNarrativeStep(scenarioIdx, stepIdx + 1);
     }
   };
+
+  // Make the button itself reliable, and let the popup card advance as a fallback.
+  btn.onclick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    advanceNarrative();
+  };
+  popup.onclick = (event) => {
+    if (event.target.closest('.next-btn')) return;
+    advanceNarrative();
+  };
 }
 
 function endNarrative(scenarioIdx) {
@@ -2456,6 +2458,40 @@ function endNarrative(scenarioIdx) {
   if (screen) screen.classList.remove('narrative-mode');
   const popup = document.getElementById(`narrative${scenarioIdx}`);
   if (popup) popup.classList.remove('show');
+}
+
+function showSingleMomentPopup(scenarioIdx) {
+  const popup = document.getElementById(`narrative${scenarioIdx}`);
+  if (!popup) return;
+  popup.classList.add('single-moment');
+  popup.querySelector('.text').innerHTML = "They can’t block…<br>so they control what happens next.";
+  const btn = popup.querySelector('.next-btn');
+  if (btn) btn.textContent = '';
+  popup.classList.remove('show');
+  void popup.offsetWidth;
+  popup.classList.add('show');
+
+  pulseBoardCells(scenarioIdx, [18, 42, 55, 144]);
+  setTimeout(() => pulsePadValuesAll(scenarioIdx, [2, 3, 6, 9]), 850);
+
+  setTimeout(() => {
+    popup.classList.remove('show');
+    setTimeout(() => popup.classList.remove('single-moment'), 350);
+  }, 3800);
+}
+
+function pulsePadValuesAll(scenarioIdx, values) {
+  ['pad1', 'pad2'].forEach(padKey => {
+    const padContainer = document.getElementById(`pads${scenarioIdx}-${padKey}`);
+    if (!padContainer) return;
+    values.forEach(value => {
+      const cell = padContainer.querySelector(`.pad-cell[data-value="${value}"]`);
+      if (!cell) return;
+      cell.classList.remove('narr-pulse');
+      void cell.offsetWidth;
+      cell.classList.add('narr-pulse');
+    });
+  });
 }
 
 function clearNarrativeHighlights(scenarioIdx) {
@@ -2496,20 +2532,6 @@ function pulsePadCells(scenarioIdx, padCells) {
     cell.classList.remove('narr-pulse');
     void cell.offsetWidth;
     cell.classList.add('narr-pulse');
-  });
-}
-
-function pulsePadValuesAll(scenarioIdx, values) {
-  ['pad1', 'pad2'].forEach(padKey => {
-    const padContainer = document.getElementById(`pads${scenarioIdx}-${padKey}`);
-    if (!padContainer) return;
-    values.forEach(value => {
-      const cell = padContainer.querySelector(`.pad-cell[data-value="${value}"]`);
-      if (!cell) return;
-      cell.classList.remove('narr-pulse');
-      void cell.offsetWidth;
-      cell.classList.add('narr-pulse');
-    });
   });
 }
 
@@ -2563,13 +2585,6 @@ function restart() {
   hideLeaderForm();
   const lEmail = document.getElementById('leaderEmail');
   if (lEmail) lEmail.value = '';
-  // Clear narrative state on every scenario screen + hide popups
-  [1, 2, 3].forEach(i => {
-    const screen = document.getElementById(`s${i + 2}`);
-    if (screen) screen.classList.remove('narrative-mode');
-    const popup = document.getElementById(`narrative${i}`);
-    if (popup) popup.classList.remove('show');
-  });
   initScenarios();
   goto(1);
 }
@@ -2618,69 +2633,8 @@ function hideLeaderForm() {
   if (form) form.style.display = 'none';
   if (buttons) buttons.style.display = '';
 }
-/* ============================================================
-   SIGNUP SUBMISSIONS — POST to /api/signup (Vercel function)
-============================================================ */
-async function submitSignup({ formId, source, emailInputId, updatesInputId, submitLabel }) {
-  const formEl    = document.getElementById(formId);
-  if (!formEl) return;
-  const emailEl   = document.getElementById(emailInputId);
-  const updatesEl = document.getElementById(updatesInputId);
-  const submitBtn = formEl.querySelector('button[type="submit"]');
-  const email = (emailEl?.value || '').trim();
-  if (!email) return;
-  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Sending…'; }
-
-  try {
-    const res = await fetch('/api/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email,
-        pathway:     state.problem || 'unknown',
-        studentName: state.studentName || '',
-        source,
-        sendUpdates: !!updatesEl?.checked,
-      }),
-    });
-    if (!res.ok) throw new Error('Signup failed: ' + res.status);
-    showSignupSuccess(formEl, source, email);
-  } catch (e) {
-    console.error('[signup]', e);
-    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = submitLabel; }
-    alert('Sorry — something went wrong. Please try again, or email us directly.');
-  }
-}
-
-function submitTeacherForm() {
-  submitSignup({
-    formId: 'teacherForm',
-    source: 'teacher',
-    emailInputId: 'signupEmail',
-    updatesInputId: 'signupUpdates',
-    submitLabel: 'Start my free trial',
-  });
-}
-
 function submitLeaderForm() {
-  submitSignup({
-    formId: 'leaderForm',
-    source: 'leader',
-    emailInputId: 'leaderEmail',
-    updatesInputId: 'leaderUpdates',
-    submitLabel: 'Send overview',
-  });
-}
-
-function showSignupSuccess(formEl, source, email) {
-  const message = source === 'leader'
-    ? `Your overview is on its way to <strong>${email}</strong>. We'll follow up shortly.`
-    : `We've sent a welcome to <strong>${email}</strong>. Check your inbox in a minute.`;
-  formEl.innerHTML = `
-    <div style="text-align:center; padding: 8px 4px;">
-      <h2 style="font-size:22px; margin-bottom:10px;">You're in.</h2>
-      <p style="color:var(--ink-soft); line-height:1.55;">${message}</p>
-    </div>`;
+  alert('Prototype — in production this emails the leadership pack.');
 }
 
 function applyName() {
@@ -2701,72 +2655,24 @@ function applyName() {
 /* Customize scenario titles, leads, and hints based on the teacher's chosen pathway */
 const PATHWAY_CONTENT = {
   apply: {
-    3: {
-      title: "Can they apply what they know?",
-      lead:  "4 in a row wins the game. Help them use a known fact in a new pathway.",
-      hint:  '<strong>{NAME} can change only one number pad.</strong> Which factor helps make <strong>20</strong>?'
-    },
-    4: {
-      title: "Can they use facts to defend?",
-      lead:  "Player 2 can win by taking 28. {NAME} needs to apply a fact strategically, not just know it.",
-      hint:  'What are the factors of <strong>28</strong>? Is one already on a number pad?'
-    },
-    5: {
-      title: "Can they think ahead with factor relationships?",
-      lead:  "Player 2 can win with 18. {NAME} cannot block now, so they need to prevent the next move.",
-      hint:  '{NAME} needs to avoid leaving factors of <strong>18</strong> for Player 2 to use.'
-    }
+    3: { title: "Can they rethink what they know?", lead: "", hint: '<strong>Change one pad.</strong> Make <strong>20</strong> to complete 4 in a row.' },
+    4: { title: "Can they defend with number facts?", lead: "Player 2 is about to win…", hint: 'Make <strong>28</strong> to block the line.' },
+    5: { title: "Can they think one move ahead?", lead: "", hint: 'Do not leave <strong>2, 3, 6 or 9</strong> on either number pad.' }
   },
   counting: {
-    3: {
-      title: "Can recall become useful?",
-      lead:  "Facts are retrieved because the game gives them a reason to matter.",
-      hint:  '4 in a row gets the win. What factors below make <strong>20</strong>?'
-    },
-    4: {
-      title: "Can they retrieve facts under pressure?",
-      lead:  "Player 2 needs 28. {NAME} needs the right factor pair quickly enough to block.",
-      hint:  'What factors make <strong>28</strong>? Which number pad needs to change?'
-    },
-    5: {
-      title: "Can they hold factor pairs in mind?",
-      lead:  "Player 2 needs 18. {NAME} must remember which factors of 18 are dangerous to leave.",
-      hint:  'What are the factors of <strong>18</strong>? {NAME} cannot leave those available on the pads.'
-    }
+    3: { title: "Can they recall facts when they matter?", lead: "", hint: '<strong>Change one pad.</strong> Make <strong>20</strong> to complete 4 in a row.' },
+    4: { title: "Can they use recall to defend?", lead: "Player 2 is about to win…", hint: 'Make <strong>28</strong> to block the line.' },
+    5: { title: "Can they hold factor pairs in mind?", lead: "", hint: 'Do not leave <strong>2, 3, 6 or 9</strong> on either number pad.' }
   },
   freeze: {
-    3: {
-      title: "Can they adapt when the pathway changes?",
-      lead:  "The known 4×5 pathway is blocked. {NAME} needs to stay calm and find another way to make 20.",
-      hint:  '{NAME} sees that <strong>20</strong> wins. Can they adapt with the numbers available?'
-    },
-    4: {
-      title: "Can they stay with the problem under pressure?",
-      lead:  "This time, it is time to defend. The board has changed, but the reasoning is still there.",
-      hint:  'What factors make <strong>28</strong> so {NAME} can block?'
-    },
-    5: {
-      title: "Can they reason forward when they cannot block?",
-      lead:  "Player 2 needs 18. {NAME} cannot block directly, so they need to think one move ahead.",
-      hint:  '{NAME} cannot leave any factors of <strong>18</strong> for Player 2 to use.'
-    }
+    3: { title: "Can they adapt when the numbers change?", lead: "", hint: '<strong>Change one pad.</strong> Make <strong>20</strong> to complete 4 in a row.' },
+    4: { title: "Can they stay calm and defend?", lead: "Player 2 is about to win…", hint: 'Make <strong>28</strong> to block the line.' },
+    5: { title: "Can they think ahead instead of freezing?", lead: "", hint: 'Do not leave <strong>2, 3, 6 or 9</strong> on either number pad.' }
   },
   speed: {
-    3: {
-      title: "Can they reason before they answer?",
-      lead:  "Speed will not find this win. {NAME} needs to think about which factor change actually takes the cell.",
-      hint:  '4 in a row gets the win. What factors below make <strong>20</strong>? Do not guess — reason it out.'
-    },
-    4: {
-      title: "Can they pause long enough to defend?",
-      lead:  "Player 2 can win by taking 28. {NAME} needs to pause, read the threat, and choose the factor pair that blocks.",
-      hint:  'What factors make <strong>28</strong>? Which number pad needs to change?'
-    },
-    5: {
-      title: "Can they think about consequences, not just facts?",
-      lead:  "Player 2 needs 18. Knowing facts is not enough; {NAME} has to think about which factors are dangerous to leave.",
-      hint:  'What are the factors of <strong>18</strong>? {NAME} cannot leave those available on the pads.'
-    }
+    3: { title: "Can they reason before they answer?", lead: "", hint: '<strong>Change one pad.</strong> Make <strong>20</strong> to complete 4 in a row.' },
+    4: { title: "Can they pause long enough to defend?", lead: "Player 2 is about to win…", hint: 'Make <strong>28</strong> to block the line.' },
+    5: { title: "Can they see consequences, not just answers?", lead: "", hint: 'Do not leave <strong>2, 3, 6 or 9</strong> on either number pad.' }
   }
 };
 
@@ -2774,26 +2680,10 @@ const PATHWAY_CONTENT = {
    Use {NAME} for capitalised name (or "Your student" fallback) and
    {name} for lowercase ("your student" fallback). */
 const CONTEXT_CARDS = {
-  apply: {
-    3: "You said students <strong>know facts but cannot apply them flexibly</strong>. Here, {NAME} has to use a known fact in a new game decision.",
-    4: "{NAME} knows they need 28 to block Player 2. The question is whether they can turn that fact knowledge into a strategic move.",
-    5: "This is flexible fluency at a deeper level: reasoning about factors now to control what happens next."
-  },
-  counting: {
-    3: "You said students struggle with quick recall. The game creates repeated, purposeful retrieval without it feeling like a worksheet.",
-    4: "Facts are practised because they matter. {NAME} needs 28 quickly enough to defend the board.",
-    5: "Factor pairs become memorable because they decide what Player 2 can do next."
-  },
-  freeze: {
-    3: "You said students freeze when context changes. The board keeps changing, so {NAME} practises adapting instead of shutting down.",
-    4: "The situation is new, but the mathematics is familiar. {NAME} has to stay with the board and reason through it.",
-    5: "This is the strongest test of freezing: {NAME} cannot block directly, so they must reason forward."
-  },
-  speed: {
-    3: "You said students answer fast but do not really understand why. Here, speed alone will not find the winning move.",
-    4: "A fast answer can miss the threat. {NAME} needs to pause, read the board, and choose the defending factor pair.",
-    5: "This reveals understanding because {NAME} has to think about consequences, not just produce a fact."
-  }
+  apply: {},
+  counting: {},
+  freeze: {},
+  speed: {}
 };
 
 function fillName(str) {
@@ -2813,7 +2703,11 @@ function customizeScenarioPrompts() {
     const hintEl  = document.getElementById(`s${n}hint`);
     const ctxEl   = document.getElementById(`contextS${n}`);
     if (titleEl) titleEl.textContent = fillName(content[n].title);
-    if (leadEl)  leadEl.innerHTML    = fillName(content[n].lead);
+    if (leadEl) {
+      const leadText = fillName(content[n].lead);
+      leadEl.innerHTML = leadText;
+      leadEl.style.display = leadText.trim() ? '' : 'none';
+    }
     if (hintEl) {
       // Hint has an icon + text structure; preserve the icon div.
       hintEl.innerHTML = `<div class="icon">?</div><div>${fillName(content[n].hint)}</div>`;
@@ -2835,7 +2729,7 @@ function renderEcho() {
   document.getElementById('echoQuote').textContent = `"${q}"`;
   // Universal closing — pathway-tailored lines live in the narrative now
   document.getElementById('closeHeadline').textContent = "This is what strong number foundations look like.";
-  document.getElementById('closeLead').textContent = "Not just knowing mathematics — but thinking with it.";
+  document.getElementById('closeLead').textContent = "Not just knowing maths — but thinking with it.";
 }
 
 /* ===========================================================
@@ -2915,7 +2809,7 @@ function renderMgrid() {
 const MINDSET_ROWS = [
   { dim: "Confidence",            s1: 3.1, s2: 4.2 },
   { dim: "Self-efficacy",         s1: 2.9, s2: 4.0 },
-  { dim: "Attitude toward mathematics", s1: 3.4, s2: 3.6 },
+  { dim: "Attitude toward maths", s1: 3.4, s2: 3.6 },
   { dim: "Growth mindset",        s1: 3.2, s2: 4.3 },
   { dim: "Mathematical reasoning",s1: 2.8, s2: 3.9 }
 ];
