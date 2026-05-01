@@ -114,19 +114,22 @@ export default async function handler(req, res) {
       ? 'Your Number Hive leadership overview'
       : 'Welcome to Number Hive — let’s get your class playing';
     const body = isLeader
-      ? [
-          `${greeting}`,
-          ``,
-          `Thanks for requesting the Number Hive leadership overview. We’ll follow up shortly with a short pack you can share with your team.`,
-          ``,
-          `In the meantime, the demo you just walked through is at:`,
-          `https://nh-demo3.vercel.app`,
-          ``,
-          `Reply to this email if you’d like to chat.`,
-          ``,
-          `— The Number Hive team`,
-        ].join('\n')
-      : [
+  ? [
+      `Hi there,`,
+      ``,
+      `Thanks for taking a look. Most leaders arrive at Number Hive after a teacher has tried it with a class. Teachers see what it does for students — the questions you'll be weighing are different. Timetable impact, prep load, what the evidence actually looks like.`,
+      ``,
+      `I won't pitch in this email. This [short overview](https://canva.link/y63ezbmbj0lics3) is the most honest answer I can give to "is this worth our time?" — about 60 seconds to read.`,
+      ``,
+      `There are links from the overview if you'd like to look further, or you can email me back directly.`,
+      ``,
+      `Best,`,
+      `Chris`,
+      `Founder, Number Hive`,
+      `numberhive.app`,
+    ].join('\n')
+  : [
+      // ... your existing teacher branch stays as-is
           `Hi there,`,
           ``,
           `Thanks for exploring Number Hive.`,
