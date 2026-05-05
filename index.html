@@ -781,6 +781,12 @@
   .pill.green { background: #D7EDD5; color: #2F6B2A; }
   .pill.amber { background: #FCE2B0; color: #8B5D0C; }
   .pill.red { background: var(--red-soft); color: var(--red-deep); }
+  .pill.ghost {
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px dashed var(--border);
+    font-weight: 500;
+  }
 
   /* 12x12 multiplication grid for teacher lens */
   .mgrid-wrap {
@@ -1285,15 +1291,20 @@
           </div>
         </div>
         <div class="insights">
-          <h3>What's emerging</h3>
+          <h3>Currently in product</h3>
           <ul>
             <li><strong>× 4 facts</strong> <span class="pill green">Secure</span></li>
             <li><strong>× 7 facts</strong> <span class="pill red">Hesitating</span></li>
-            <li><strong>Strategic thinking</strong> <span class="pill green">Strong</span></li>
-            <li><strong>Reciprocal relationships</strong> <span class="pill amber">Emerging</span></li>
-            <li><strong>Flexible fluency</strong> <span class="pill amber">Emerging</span></li>
           </ul>
-          <p class="meta" style="margin-top:14px;">Captured automatically as students play. No extra testing.</p>
+          <p class="meta" style="margin-top:8px;">Captured automatically as students play. No extra testing.</p>
+
+          <h3 style="margin-top:22px;">Coming soon</h3>
+          <p class="meta" style="margin-top:6px; margin-bottom:8px;">Skills students practise every game — soon visible to teachers.</p>
+          <ul>
+            <li><strong>Strategic thinking</strong> <span class="pill ghost">In development</span></li>
+            <li><strong>Reciprocal relationships</strong> <span class="pill ghost">In development</span></li>
+            <li><strong>Flexible fluency</strong> <span class="pill ghost">In development</span></li>
+          </ul>
         </div>
       </div>
 
